@@ -27,12 +27,8 @@ connectDB().catch((err) => {
 
 const app = express();
 
+// Enable CORS with full method support for preflights (PUT/PATCH/DELETE)
 app.use(cors());
-// Code-10 bug: custom header restricts allowed methods to GET and POST, breaking PUT/DELETE CORS preflights
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Methods", "GET, POST");
-  next();
-});
 app.use(express.json());
 
 // Middleware to ensure DB connection before handling requests
@@ -65,7 +61,6 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/quizzes", quizRoutes);
 // mounting user routes
 app.use("/api/users", userRoutes);
-
 
 // 404 handler (unknown routes)
 app.use((req, res) => {

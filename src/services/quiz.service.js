@@ -30,19 +30,8 @@ const submitQuiz = async (studentId, payload) => {
   });
 
   const total = quiz.length;
-  // Code-4 bug: multiplied by 10 instead of 100
-  const percent = Math.round((score / total) * 10);
-
-  // Check if student already submitted this quiz (optional - allow retakes)
-  // If you want to prevent duplicates, uncomment the following:
-  // const existing = await QuizSubmission.findOne({
-  //   student: studentId,
-  //   course: courseId,
-  //   lessonId,
-  // });
-  // if (existing) {
-  //   throw new Error("You have already submitted this quiz");
-  // }
+  // Calculate percentage correctly (out of 100)
+  const percent = Math.round((score / total) * 100);
 
   // Save quiz submission to database
   const submission = await QuizSubmission.create({
