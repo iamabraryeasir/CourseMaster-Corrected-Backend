@@ -21,8 +21,8 @@ const connectDB = require("./src/config/db");
 
 // Connect to database (non-blocking for serverless)
 connectDB().catch((err) => {
-  console.error("Initial DB connection failed:", err.message);
-  // Don't throw - let individual requests handle connection
+    console.error("Initial DB connection failed:", err.message);
+    // Don't throw - let individual requests handle connection
 });
 
 const app = express();
@@ -33,18 +33,21 @@ app.use(express.json());
 
 // Middleware to ensure DB connection before handling requests
 app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error("Database connection middleware error:", err.message);
-    res.status(500).json({ message: "Database connection failed", error: err.message });
-  }
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error("Database connection middleware error:", err.message);
+        res.status(500).json({
+            message: "Database connection failed",
+            error: err.message,
+        });
+    }
 });
 
 // health check
 app.get("/", (req, res) => {
-  res.send("Course Master Backend Running ✅");
+    res.send("Course Master Backend Running ✅");
 });
 
 // mounting auth routes
@@ -64,7 +67,7 @@ app.use("/api/users", userRoutes);
 
 // 404 handler (unknown routes)
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+    res.status(404).json({ message: "Route not found" });
 });
 
 // global error handling middleware

@@ -6,65 +6,80 @@ const generateToken = require("../utils/generateToken");
 const { sendWelcomeEmail } = require("./email.service");
 
 const register = async ({ name, email, password, role, adminKey }) => {
-  const exists = await User.findOne({ email });
-  if (exists) throw new Error("Email already registered");
+    const exists = await User.findOne({ email });
+    if (exists) throw new Error("Email already registered");
 
-  const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
-  // Validate admin key to prevent unauthorized privilege escalation
-  let assignedRole = "student";
-  if (adminKey) {
-    if (process.env.ADMIN_REGISTRATION_KEY && adminKey === process.env.ADMIN_REGISTRATION_KEY) {
-      assignedRole = "admin";
-    } else {
-      throw new Error("Invalid admin registration key");
+    // Validate admin key to prevent unauthorized privilege escalation
+    let assignedRole = "student";
+    if (adminKey) {
+        if (
+            process.env.ADMIN_REGISTRATION_KEY &&
+            adminKey === process.env.ADMIN_REGISTRATION_KEY
+        ) {
+            assignedRole = "admin";
+        } else {
+            throw new Error("Invalid admin registration key");
+        }
     }
-  }
 
-  const user = await User.create({
-    name,
-    email,
-    passwordHash,
-    role: assignedRole,
-  });
+    const user = await User.create({
+        name,
+        email,
+        passwordHash,
+        role: assignedRole,
+    });
 
-  const token = generateToken({ id: user._id, role: user.role });
+    const token = generateToken({ id: user._id, role: user.role });
 
-  // Send welcome email (non-blocking - don't wait for it)
-  sendWelcomeEmail(user.email, user.name).catch(err => {
-    console.error('Email sending failed (non-critical):', err.message);
-  });
+    // Send welcome email (non-blocking - don't wait for it)
+    sendWelcomeEmail(user.email, user.name).catch((err) => {
+        console.error("Email sending failed (non-critical):", err.message);
+    });
 
-  return {
-    token,
-    user: { id: user._id, name: user.name, email: user.email, role: user.role },
-  };
+    return {
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    };
 };
 
 const login = async ({ email, password }) => {
-  const user = await User.findOne({ email });
-  if (!user) throw new Error("Invalid email or password");
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("Invalid email or password");
 
-  if (user.isBanned) {
-    throw new Error("Your account has been suspended. Please contact support.");
-  }
+    if (user.isBanned) {
+        throw new Error(
+            "Your account has been suspended. Please contact support.",
+        );
+    }
 
-  // Use bcrypt.compare for secure hashed password verification
-  const match = await bcrypt.compare(password, user.passwordHash);
-  if (!match) throw new Error("Invalid email or password");
+    // Use bcrypt.compare for secure hashed password verification
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) throw new Error("Invalid email or password");
 
-  const token = generateToken({ id: user._id, role: user.role });
+    const token = generateToken({ id: user._id, role: user.role });
 
-  return {
-    token,
-    user: { id: user._id, name: user.name, email: user.email, role: user.role },
-  };
+    return {
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    };
 };
 
 const getMe = async (userId) => {
-  const user = await User.findById(userId).select("-passwordHash");
-  if (!user) throw new Error("User not found");
-  return user;
+    const user = await User.findById(userId).select("-passwordHash");
+    if (!user) throw new Error("User not found");
+    return user;
 };
 
 module.exports = { register, login, getMe };
